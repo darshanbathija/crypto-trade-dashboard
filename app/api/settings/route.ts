@@ -36,6 +36,18 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    // In production (Vercel), environment variables are read-only
+    // They must be set through the Vercel dashboard
+    if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        {
+          error: 'Environment variables cannot be modified in production. Please set them in your Vercel dashboard at: https://vercel.com/dashboard → Project → Settings → Environment Variables',
+          isProduction: true
+        },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
     const { gateio, mexc, kraken, blockchain } = body;
 
