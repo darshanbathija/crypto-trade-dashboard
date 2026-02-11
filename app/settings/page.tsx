@@ -39,8 +39,6 @@ export default function SettingsPage() {
   useEffect(() => {
     loadSettings();
     loadWallets();
-    // Check if we're in production
-    setIsProduction(window.location.hostname.includes('vercel.app') || process.env.NODE_ENV === 'production');
   }, []);
 
   const loadSettings = async () => {
@@ -48,6 +46,10 @@ export default function SettingsPage() {
       const response = await fetch('/api/settings');
       const data = await response.json();
       setSettings(data);
+      // Set production flag from API response
+      if (data.isProduction !== undefined) {
+        setIsProduction(data.isProduction);
+      }
     } catch (error) {
       console.error('Failed to load settings:', error);
     }

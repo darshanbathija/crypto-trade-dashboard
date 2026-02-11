@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, readFile } from 'fs/promises';
-import { join } from 'path';
 
-const ENV_FILE = join(process.cwd(), '.env');
+// Check if we're in production
+const isProduction = process.env.VERCEL || process.env.NODE_ENV === 'production';
+
+// Only import fs modules in development
+let writeFile: any, readFile: any, join: any, ENV_FILE: string;
+
+if (!isProduction) {
+  const fs = require('fs/promises');
+  const path = require('path');
+  writeFile = fs.writeFile;
+  readFile = fs.readFile;
+  join = path.join;
+  ENV_FILE = join(process.cwd(), '.env');
+}
 
 export async function GET() {
   try {
@@ -24,6 +35,7 @@ export async function GET() {
         hasBasescanKey: !!process.env.BASESCAN_API_KEY,
         walletAddresses: process.env.BASE_WALLET_ADDRESSES?.split(',').filter(Boolean) || [],
       },
+      isProduction,
     });
   } catch (error) {
     console.error('Settings GET error:', error);
@@ -38,7 +50,7 @@ export async function POST(request: NextRequest) {
   try {
     // In production (Vercel), environment variables are read-only
     // They must be set through the Vercel dashboard
-    if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+    if (isProduction) {
       return NextResponse.json(
         {
           error: 'Environment variables cannot be modified in production. Please set them in your Vercel dashboard at: https://vercel.com/dashboard → Project → Settings → Environment Variables',
