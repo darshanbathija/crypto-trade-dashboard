@@ -1,11 +1,36 @@
-// Temporarily disabled for testing - re-enable after setting up GitHub OAuth
-// export { auth as middleware } from "@/auth"
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-// export const config = {
-//   matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
-// }
+export function middleware(request: NextRequest) {
+  const authToken = request.cookies.get('auth-token');
+  const { pathname } = request.nextUrl;
 
-// Middleware disabled - REMEMBER TO RE-ENABLE THIS AFTER TESTING!
-export const config = {
-  matcher: [],
+  // Public paths that don't require authentication
+  const publicPaths = ['/login', '/api/auth/login'];
+  const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
+
+  // Allow static files and API routes (except auth routes)
+  const isStaticFile = pathname.startsWith('/_next') || pathname.startsWith('/favicon.ico');
+
+  if (isStaticFile) {
+    return NextResponse.next();
+  }
+
+  // If user is not authenticated and trying to access protected route
+  if (!authToken && !isPublicPath) {
+    const loginUrl = new URL('/login', request.url);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // If user is authenticated and trying to access login page, redirect to dashboard
+  if (authToken && pathname === '/login') {
+    const dashboardUrl = new URL('/dashboard', request.url);
+    return NextResponse.redirect(dashboardUrl);
+  }
+
+  return NextResponse.next();
 }
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+};
