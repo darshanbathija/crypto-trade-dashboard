@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASESCAN_API_URL = 'https://api.basescan.org/v2/api';
+const BASESCAN_API_URL = 'https://api.etherscan.io/v2/api';
 
 export interface BasescanTransaction {
   blockNumber: string;
