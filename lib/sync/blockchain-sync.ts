@@ -2,6 +2,16 @@ import { prisma } from '@/lib/db/prisma';
 import { fetchSwapsForWallets } from '@/lib/blockchain/thegraph';
 import { parseUniswapSwap } from '@/lib/blockchain/dex-parser';
 
+// Helper to add timeout to promises
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Request timeout')), timeoutMs)
+    ),
+  ]);
+}
+
 interface SyncResult {
   success: boolean;
   tradesAdded: number;
@@ -54,8 +64,11 @@ export async function syncBlockchainTrades(fromTimestamp?: number): Promise<Sync
       `Syncing blockchain trades for ${wallets.length} wallets from timestamp ${fromTimestamp}`
     );
 
-    // Fetch swaps from The Graph
-    const swapsByWallet = await fetchSwapsForWallets(walletAddresses, fromTimestamp);
+    // Fetch swaps from The Graph with timeout
+    const swapsByWallet = await withTimeout(
+      fetchSwapsForWallets(walletAddresses, fromTimestamp),
+      30000
+    );
 
     let tradesAdded = 0;
     let tradesSkipped = 0;

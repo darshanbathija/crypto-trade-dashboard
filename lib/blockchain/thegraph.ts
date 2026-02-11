@@ -1,5 +1,15 @@
 import { request, gql } from 'graphql-request';
 
+// Helper to add timeout to promises
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Request timeout')), timeoutMs)
+    ),
+  ]);
+}
+
 // Uniswap V3 Subgraph endpoint for Base
 const UNISWAP_V3_BASE_SUBGRAPH =
   'https://api.studio.thegraph.com/query/48211/uniswap-v3-base/version/latest';
@@ -66,11 +76,14 @@ export async function fetchUniswapSwaps(
       }
     `;
 
-    const data = await request(UNISWAP_V3_BASE_SUBGRAPH, SWAPS_QUERY, {
-      walletAddress: walletAddress.toLowerCase(),
-      fromTimestamp,
-      limit,
-    });
+    const data = await withTimeout(
+      request(UNISWAP_V3_BASE_SUBGRAPH, SWAPS_QUERY, {
+        walletAddress: walletAddress.toLowerCase(),
+        fromTimestamp,
+        limit,
+      }),
+      15000
+    );
 
     return (data as any).swaps || [];
   } catch (error) {
