@@ -23,6 +23,7 @@ export default function SettingsPage() {
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isProduction, setIsProduction] = useState(false);
 
   // Form state
   const [gateioApiKey, setGateioApiKey] = useState('');
@@ -38,6 +39,8 @@ export default function SettingsPage() {
   useEffect(() => {
     loadSettings();
     loadWallets();
+    // Check if we're in production
+    setIsProduction(window.location.hostname.includes('vercel.app') || process.env.NODE_ENV === 'production');
   }, []);
 
   const loadSettings = async () => {
@@ -102,7 +105,7 @@ export default function SettingsPage() {
         // Reload settings
         await loadSettings();
       } else {
-        setMessage({ type: 'error', text: data.error });
+        setMessage({ type: 'error', text: data.error || 'Failed to save settings' });
       }
     } catch (error) {
       setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to save' });
@@ -197,6 +200,33 @@ export default function SettingsPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
+        {/* Production Environment Warning */}
+        {isProduction && (
+          <div className="mb-6 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                  Production Environment Detected
+                </h3>
+                <div className="mt-2 text-sm text-blue-700 dark:text-blue-400">
+                  <p>API keys cannot be modified through this interface in production. To update environment variables:</p>
+                  <ol className="list-decimal list-inside mt-2 space-y-1">
+                    <li>Go to your <a href="https://vercel.com/dashboard" target="_blank" rel="noopener noreferrer" className="underline font-medium">Vercel Dashboard</a></li>
+                    <li>Select your project → Settings → Environment Variables</li>
+                    <li>Add or update: GATEIO_API_KEY, MEXC_API_KEY, BASESCAN_API_KEY, etc.</li>
+                    <li>Redeploy for changes to take effect</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Message */}
         {message && (
           <div
@@ -352,12 +382,12 @@ export default function SettingsPage() {
         <div className="flex justify-end mb-4 sm:mb-6">
           <button
             onClick={handleSaveSettings}
-            disabled={saving}
+            disabled={saving || isProduction}
             className={`w-full sm:w-auto px-6 py-2 rounded-md font-medium text-sm sm:text-base text-white ${
-              saving ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              saving || isProduction ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            {saving ? 'Saving...' : 'Save API Keys'}
+            {saving ? 'Saving...' : isProduction ? 'Use Vercel Dashboard' : 'Save API Keys'}
           </button>
         </div>
 
