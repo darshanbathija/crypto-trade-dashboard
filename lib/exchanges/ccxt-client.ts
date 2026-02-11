@@ -18,7 +18,7 @@ export interface CCXTTrade {
 }
 
 export class ExchangeClient {
-  private exchange: ccxt.Exchange;
+  private exchange: any;
   private exchangeId: string;
 
   constructor(exchangeId: string, apiKey: string, secret: string) {
