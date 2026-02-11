@@ -182,3 +182,28 @@ model SyncJob {
   @@index([jobType, status])
   @@index([createdAt])
 }
+
+// Inventory snapshots for tracking balances over time
+model InventorySnapshot {
+  id          String   @id @default(cuid())
+
+  // Location identification
+  source      String       // 'GATEIO' | 'MEXC' | 'KRAKEN' | 'BASE_CHAIN'
+  location    String       // Exchange name or wallet address
+
+  // Asset and balance
+  asset       String       // 'USDT' | 'USDC' | 'UP'
+  balance     Float
+
+  // USD value at snapshot time
+  usdValue    Float?
+  priceAtSnapshot Float?   // Asset price in USD at snapshot time
+
+  // Snapshot metadata
+  snapshotAt  DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([source, asset, snapshotAt])
+  @@index([asset, snapshotAt])
+  @@index([snapshotAt])
+}

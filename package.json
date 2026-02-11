@@ -14,30 +14,31 @@
     "backfill": "tsx scripts/backfill.ts"
   },
   "dependencies": {
+    "@prisma/client": "^5.19.0",
+    "axios": "^1.7.0",
+    "ccxt": "^4.4.0",
+    "date-fns": "^3.6.0",
+    "graphql": "^16.9.0",
+    "graphql-request": "^6.1.0",
     "next": "^14.2.0",
+    "protobufjs": "^8.0.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "@prisma/client": "^5.19.0",
-    "ccxt": "^4.4.0",
-    "swr": "^2.2.5",
     "recharts": "^2.12.0",
-    "date-fns": "^3.6.0",
-    "graphql-request": "^6.1.0",
-    "graphql": "^16.9.0",
-    "axios": "^1.7.0",
+    "swr": "^2.2.5",
     "zod": "^3.23.0"
   },
   "devDependencies": {
     "@types/node": "^18",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "typescript": "^5.5.0",
+    "autoprefixer": "^10.4.20",
     "eslint": "^8",
     "eslint-config-next": "^14.2.0",
-    "tailwindcss": "^3.4.0",
     "postcss": "^8.4.0",
-    "autoprefixer": "^10.4.20",
     "prisma": "^5.19.0",
-    "tsx": "^4.19.0"
+    "tailwindcss": "^3.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0"
   }
 }

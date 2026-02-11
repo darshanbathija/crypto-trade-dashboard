@@ -16,7 +16,13 @@
       "Bash(npm run dev:*)",
       "Bash(git init:*)",
       "Bash(git branch:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gh repo create:*)",
+      "Bash(npm install:*)",
+      "Bash(vercel --prod:*)",
+      "Bash(vercel login)",
+      "Bash(lsof:*)"
     ]
   }
 }
