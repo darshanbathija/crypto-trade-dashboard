@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { syncBlockchainTrades } from '@/lib/sync/blockchain-sync';
 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // Max 60 seconds for sync operations
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
