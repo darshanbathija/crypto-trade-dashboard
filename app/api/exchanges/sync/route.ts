@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { syncExchangeTrades, syncAllExchanges, ExchangeSource } from '@/lib/sync/exchange-sync';
 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // Max 60 seconds for sync operations
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

@@ -4,6 +4,16 @@ import { createMexcClient } from '@/lib/exchanges/mexc';
 
 export const dynamic = 'force-dynamic';
 
+// Helper to add timeout to promises
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Request timeout')), timeoutMs)
+    ),
+  ]);
+}
+
 export async function GET() {
   const results = {
     gateio: { configured: false, valid: false, error: null as string | null },
@@ -22,10 +32,10 @@ export async function GET() {
     } else {
       try {
         const client = createGateioClient();
-        await client.loadMarkets();
+        await withTimeout(client.loadMarkets(), 10000);
 
         // Try to fetch account balance (read-only test)
-        await client.fetchBalance();
+        await withTimeout(client.fetchBalance(), 10000);
         results.gateio.valid = true;
         await client.close();
       } catch (error: any) {
@@ -46,8 +56,8 @@ export async function GET() {
     } else {
       try {
         const client = createMexcClient();
-        await client.loadMarkets();
-        await client.fetchBalance();
+        await withTimeout(client.loadMarkets(), 10000);
+        await withTimeout(client.fetchBalance(), 10000);
         results.mexc.valid = true;
         await client.close();
       } catch (error: any) {
@@ -69,7 +79,7 @@ export async function GET() {
       // Test with a simple API call (V2)
       try {
         const testUrl = `https://api.etherscan.io/v2/api?chainid=8453&module=account&action=balance&address=0x0000000000000000000000000000000000000000&apikey=${process.env.BASESCAN_API_KEY}`;
-        const response = await fetch(testUrl);
+        const response = await withTimeout(fetch(testUrl), 10000);
         const data = await response.json();
 
         if (data.status === '1' || data.message === 'OK') {

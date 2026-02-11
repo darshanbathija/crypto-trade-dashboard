@@ -6,6 +6,16 @@ import { createKrakenClient, getKrakenTrackedSymbols } from '@/lib/exchanges/kra
 
 export type ExchangeSource = 'GATEIO' | 'MEXC' | 'KRAKEN';
 
+// Helper to add timeout to promises
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Request timeout')), timeoutMs)
+    ),
+  ]);
+}
+
 interface SyncResult {
   success: boolean;
   tradesAdded: number;
@@ -43,8 +53,8 @@ export async function syncExchangeTrades(
         ? createMexcClient()
         : createKrakenClient();
 
-    // Load markets
-    await client.loadMarkets();
+    // Load markets with timeout
+    await withTimeout(client.loadMarkets(), 15000);
 
     // Get tracked symbols for this exchange
     const symbols =
@@ -56,8 +66,8 @@ export async function syncExchangeTrades(
 
     console.log(`Syncing ${source} trades for symbols:`, symbols);
 
-    // Fetch trades for all symbols
-    const trades = await client.fetchAllTradesForSymbols(symbols, since);
+    // Fetch trades for all symbols with timeout
+    const trades = await withTimeout(client.fetchAllTradesForSymbols(symbols, since), 30000);
 
     console.log(`Fetched ${trades.length} total trades from ${source}`);
 
