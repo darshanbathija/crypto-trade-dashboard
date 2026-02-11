@@ -1,0 +1,184 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Core trade entity - unified for both CEX and DEX
+model Trade {
+  id            String   @id @default(cuid())
+
+  // Source identification
+  source        String       // 'GATEIO' | 'MEXC' | 'KRAKEN' | 'BASE_CHAIN'
+  sourceId      String       // Exchange trade ID or blockchain tx hash
+
+  // Trade details
+  timestamp     DateTime
+  pair          String       // e.g., 'BTC/USDT'
+  baseAsset     String       // e.g., 'BTC'
+  quoteAsset    String       // e.g., 'USDT'
+  side          String       // 'BUY' | 'SELL'
+  price         Float
+  quantity      Float
+  total         Float
+
+  // Fees
+  fee           Float
+  feeCurrency   String
+
+  // DEX-specific fields (nullable for CEX trades)
+  walletAddress String?
+  txHash        String?      @unique
+  gasUsed       Float?
+  gasPrice      Float?
+  dexProtocol   String?      // 'Uniswap V2', 'Uniswap V3', etc.
+
+  // Metadata
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // Relations
+  positions     PositionTrade[]
+
+  @@unique([source, sourceId])
+  @@index([timestamp])
+  @@index([baseAsset])
+  @@index([walletAddress])
+}
+
+// Position tracking with FIFO/LIFO
+model Position {
+  id            String   @id @default(cuid())
+
+  asset         String
+  exchange      String?      // NULL for DEX positions
+  walletAddress String?      // NULL for CEX positions
+
+  // Position state
+  status        String          // 'OPEN' | 'CLOSED'
+  side          String          // 'BUY' | 'SELL' (treating as LONG/SHORT)
+
+  // Quantities
+  openQuantity  Float
+  closedQuantity Float     @default(0)
+  remainingQuantity Float
+
+  // Pricing
+  avgOpenPrice  Float
+  avgClosePrice Float?
+  currentPrice  Float?
+
+  // P&L
+  realizedPnL   Float      @default(0)
+  unrealizedPnL Float?
+  totalFees     Float      @default(0)
+
+  // Timestamps
+  openedAt      DateTime
+  closedAt      DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // Relations
+  trades        PositionTrade[]
+
+  @@index([asset])
+  @@index([status])
+  @@index([openedAt])
+}
+
+// Join table connecting trades to positions
+model PositionTrade {
+  id          String   @id @default(cuid())
+
+  positionId  String
+  position    Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+
+  tradeId     String
+  trade       Trade    @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+
+  quantity    Float  // How much of this trade was allocated
+  createdAt   DateTime @default(now())
+
+  @@unique([positionId, tradeId])
+  @@index([positionId])
+  @@index([tradeId])
+}
+
+// Wallet tracking for Base blockchain
+model Wallet {
+  id          String   @id @default(cuid())
+  address     String   @unique
+  label       String?              // User-friendly label
+  isActive    Boolean  @default(true)
+
+  // Sync tracking
+  lastSyncedBlock BigInt?
+  lastSyncedAt    DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([address])
+}
+
+// Asset metadata and current pricing
+model Asset {
+  id              String   @id @default(cuid())
+  symbol          String   @unique
+  name            String?
+  decimals        Int      @default(18)
+
+  // Contract addresses for different chains
+  baseAddress     String?  @unique
+
+  // Current pricing
+  currentPrice    Float?
+  priceUpdatedAt  DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([symbol])
+}
+
+// Historical price data for charting
+model PriceHistory {
+  id          String   @id @default(cuid())
+  asset       String
+  timestamp   DateTime
+  price       Float
+  source      String   // 'COINGECKO' | 'EXCHANGE' | 'ONCHAIN'
+
+  createdAt   DateTime @default(now())
+
+  @@unique([asset, timestamp, source])
+  @@index([asset, timestamp])
+}
+
+// Sync job tracking
+model SyncJob {
+  id          String   @id @default(cuid())
+  jobType     String       // 'EXCHANGE' | 'BLOCKCHAIN' | 'PRICES'
+  source      String       // 'GATEIO' | 'MEXC' | 'BASE_CHAIN'
+  status      String       // 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED'
+
+  startedAt   DateTime?
+  completedAt DateTime?
+  error       String?
+
+  // Metrics
+  recordsProcessed Int?
+  recordsAdded     Int?
+
+  createdAt   DateTime @default(now())
+
+  @@index([jobType, status])
+  @@index([createdAt])
+}
