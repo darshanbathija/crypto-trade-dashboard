@@ -24,6 +24,8 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isProduction, setIsProduction] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResults, setTestResults] = useState<any>(null);
 
   // Form state
   const [gateioApiKey, setGateioApiKey] = useState('');
@@ -62,6 +64,34 @@ export default function SettingsPage() {
       setWallets(data.wallets || []);
     } catch (error) {
       console.error('Failed to load wallets:', error);
+    }
+  };
+
+  const handleTestCredentials = async () => {
+    setTesting(true);
+    setTestResults(null);
+    setMessage(null);
+
+    try {
+      const response = await fetch('/api/test-credentials');
+      const data = await response.json();
+      setTestResults(data);
+
+      // Show summary message
+      const validCount = [data.gateio.valid, data.mexc.valid, data.basescan.valid].filter(Boolean).length;
+      const configuredCount = [data.gateio.configured, data.mexc.configured, data.basescan.configured].filter(Boolean).length;
+
+      if (validCount === 0 && configuredCount === 0) {
+        setMessage({ type: 'error', text: 'No API credentials configured' });
+      } else if (validCount === 0) {
+        setMessage({ type: 'error', text: 'API credentials configured but not working. Check details below.' });
+      } else {
+        setMessage({ type: 'success', text: `${validCount} of ${configuredCount} API credentials working correctly!` });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Test failed' });
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -202,6 +232,137 @@ export default function SettingsPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
+        {/* Test Credentials Button */}
+        <div className="mb-6">
+          <button
+            onClick={handleTestCredentials}
+            disabled={testing}
+            className={`w-full sm:w-auto px-6 py-3 rounded-md font-medium text-white ${
+              testing ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
+            }`}
+          >
+            {testing ? (
+              <span className="flex items-center gap-2 justify-center">
+                <svg
+                  className="animate-spin h-5 w-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Testing Credentials...
+              </span>
+            ) : (
+              '🔍 Test API Credentials'
+            )}
+          </button>
+        </div>
+
+        {/* Test Results */}
+        {testResults && (
+          <div className="mb-6 p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+              API Credentials Test Results
+            </h3>
+            <div className="space-y-3">
+              {/* Gate.io */}
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
+                <div className="flex-shrink-0">
+                  {testResults.gateio.valid ? (
+                    <span className="text-2xl">✅</span>
+                  ) : testResults.gateio.configured ? (
+                    <span className="text-2xl">❌</span>
+                  ) : (
+                    <span className="text-2xl">⚠️</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 dark:text-white">Gate.io</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    {testResults.gateio.valid
+                      ? 'API credentials are valid and working!'
+                      : testResults.gateio.error || 'Not configured'}
+                  </div>
+                </div>
+              </div>
+
+              {/* MEXC */}
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
+                <div className="flex-shrink-0">
+                  {testResults.mexc.valid ? (
+                    <span className="text-2xl">✅</span>
+                  ) : testResults.mexc.configured ? (
+                    <span className="text-2xl">❌</span>
+                  ) : (
+                    <span className="text-2xl">⚠️</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 dark:text-white">MEXC</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    {testResults.mexc.valid
+                      ? 'API credentials are valid and working!'
+                      : testResults.mexc.error || 'Not configured'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Basescan */}
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
+                <div className="flex-shrink-0">
+                  {testResults.basescan.valid ? (
+                    <span className="text-2xl">✅</span>
+                  ) : testResults.basescan.configured ? (
+                    <span className="text-2xl">❌</span>
+                  ) : (
+                    <span className="text-2xl">⚠️</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 dark:text-white">Basescan</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    {testResults.basescan.valid
+                      ? 'API key is valid and working!'
+                      : testResults.basescan.error || 'Not configured'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Database */}
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-900">
+                <div className="flex-shrink-0">
+                  {testResults.database.connected ? (
+                    <span className="text-2xl">✅</span>
+                  ) : (
+                    <span className="text-2xl">❌</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 dark:text-white">Database</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    {testResults.database.connected
+                      ? 'Database connection successful!'
+                      : testResults.database.error || 'Connection failed'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Production Environment Warning */}
         {isProduction && (
           <div className="mb-6 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
