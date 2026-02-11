@@ -27,6 +27,11 @@ export default function SettingsPage() {
   const [testing, setTesting] = useState(false);
   const [testResults, setTestResults] = useState<any>(null);
 
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/login');
+  };
+
   // Form state
   const [gateioApiKey, setGateioApiKey] = useState('');
   const [gateioSecret, setGateioSecret] = useState('');
@@ -220,12 +225,20 @@ export default function SettingsPage() {
                 Configure API keys and wallet addresses
               </p>
             </div>
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
-            >
-              ← Back to Dashboard
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
+              >
+                ← Back to Dashboard
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-red-700 dark:text-red-300 bg-white dark:bg-gray-700 border border-red-300 dark:border-red-600 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>
