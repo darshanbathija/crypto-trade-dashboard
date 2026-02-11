@@ -64,9 +64,9 @@ export async function GET() {
     if (process.env.BASESCAN_API_KEY.includes('your_') || process.env.BASESCAN_API_KEY.includes('here')) {
       results.basescan.error = 'Placeholder value detected - not a real API key';
     } else {
-      // Test with a simple API call
+      // Test with a simple API call (V2)
       try {
-        const testUrl = `https://api.basescan.org/api?module=account&action=balance&address=0x0000000000000000000000000000000000000000&apikey=${process.env.BASESCAN_API_KEY}`;
+        const testUrl = `https://api.basescan.org/v2/api?chainid=8453&module=account&action=balance&address=0x0000000000000000000000000000000000000000&apikey=${process.env.BASESCAN_API_KEY}`;
         const response = await fetch(testUrl);
         const data = await response.json();
 

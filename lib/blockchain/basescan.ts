@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASESCAN_API_URL = 'https://api.basescan.org/api';
+const BASESCAN_API_URL = 'https://api.basescan.org/v2/api';
 
 export interface BasescanTransaction {
   blockNumber: string;
@@ -45,6 +45,7 @@ export async function fetchWalletTransactions(
 
     const response = await axios.get(BASESCAN_API_URL, {
       params: {
+        chainid: 8453, // Base chain ID
         module: 'account',
         action: 'txlist',
         address,
@@ -79,6 +80,7 @@ export async function fetchTokenTransfers(
 
     const response = await axios.get(BASESCAN_API_URL, {
       params: {
+        chainid: 8453, // Base chain ID
         module: 'account',
         action: 'tokentx',
         address,
