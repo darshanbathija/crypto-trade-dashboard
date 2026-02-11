@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
+  // Authentication disabled for local development
+  // Uncomment the code below to enable authentication
+
+  /*
   const authToken = request.cookies.get('auth-token');
   const { pathname } = request.nextUrl;
 
@@ -27,6 +31,7 @@ export function middleware(request: NextRequest) {
     const dashboardUrl = new URL('/dashboard', request.url);
     return NextResponse.redirect(dashboardUrl);
   }
+  */
 
   return NextResponse.next();
 }
