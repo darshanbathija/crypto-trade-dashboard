@@ -30,7 +30,10 @@ export function SyncButton({ onSyncComplete }: { onSyncComplete?: () => void }) 
         onSyncComplete?.();
         setTimeout(() => setSuccess(false), 3000);
       } else {
-        setError(data.error || 'Sync failed');
+        // Show detailed error message
+        const errorMsg = data.error || 'Sync failed';
+        console.error('Sync error details:', data);
+        setError(errorMsg);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sync');
