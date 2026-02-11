@@ -135,6 +135,18 @@ export class ExchangeClient {
   }
 
   /**
+   * Fetch account balance
+   */
+  async fetchBalance(): Promise<any> {
+    try {
+      return await this.exchange.fetchBalance();
+    } catch (error) {
+      console.error(`Failed to fetch balance for ${this.exchangeId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Get available markets/symbols
    */
   async getMarkets(): Promise<string[]> {
