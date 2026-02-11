@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createGateioClient } from '@/lib/exchanges/gateio';
 import { createMexcClient } from '@/lib/exchanges/mexc';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const results = {
     gateio: { configured: false, valid: false, error: null as string | null },
